@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Multi File Pair Compare</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+    h1 { margin-bottom: 8px; }
+    .table-card {
+      margin-top: 12px;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+    .pair-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      table-layout: auto; /* let columns auto-scale */
+    }
+    .pair-table th,
+    .pair-table td {
+      border-bottom: 1px solid #ececec;
+      padding: 8px 10px;
+      vertical-align: middle;
+    }
+    .pair-table th {
+      background: #f9f9f9;
+      font-weight: 600;
+      color: #3a3a3a;
+      text-align: left;
+    }
+    .pair-table tr:last-child td {
+      border-bottom: none;
+    }
+    .pair-table input[type="file"] {
+      width: 100%;
+      max-width: 100%;
+    }
+    .pair-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      white-space: nowrap;
+      width: 1%;
+    }
+    button {
+      padding: 6px 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      background: #f5f5f5;
+    }
+    button:hover {
+      background: #e0e0e0;
+    }
+    .remove-btn {
+      background: #fbe9e7;
+      border-color: #f4511e;
+      color: #c62828;
+    }
+    .remove-btn:hover {
+      background: #ffccbc;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0;
+      font-size: 14px;
+      table-layout: auto;
+    }
+    th, td {
+      border-bottom: 1px solid #ececec;
+      padding: 8px 10px;
+      vertical-align: top;
+    }
+    th {
+      background: #f9f9f9;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    details summary {
+      cursor: pointer;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+    pre {
+      background: #fafafa;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #eee;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin-top: 4px;
+    }
+    .toolbar {
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>Compare Multiple File Pairs</h1>
+  <p>Compare pairs of text files side by side (line-based, like compare-pairs.ps1).</p>
+
+  <div class="table-card">
+    <table class="pair-table" aria-label="File pairs">
+      <thead>
+        <tr>
+          <th>File 1</th>
+          <th>File 2</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="pairs-container"></tbody>
+    </table>
+  </div>
+
+  <div class="toolbar">
+    <button id="add-pair-btn">+ Them cap file</button>
+    <button id="compare-btn">Compare</button>
+    <button id="export-csv-btn" disabled>Export CSV</button>
+  </div>
+
+  <div class="table-card" style="margin-top: 16px; display:none;" id="result-wrapper">
+    <table id="result-table">
+      <thead>
+        <tr>
+          <th>File 1</th>
+          <th>File 2</th>
+          <th>Diff of file1</th>
+          <th>Diff of file2</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const pairsContainer = document.getElementById('pairs-container');
+    const addPairBtn = document.getElementById('add-pair-btn');
+    const compareBtn = document.getElementById('compare-btn');
+    const exportCsvBtn = document.getElementById('export-csv-btn');
+    const resultTable = document.getElementById('result-table');
+    const resultWrapper = document.getElementById('result-wrapper');
+    const resultBody = resultTable.querySelector('tbody');
+
+    // store rows for CSV export
+    let lastResults = [];
+
+    function createPairRow() {
+      const row = document.createElement('tr');
+      row.className = 'pair-row';
+
+      const tdA = document.createElement('td');
+      const tdB = document.createElement('td');
+      const tdActions = document.createElement('td');
+      tdActions.className = 'pair-actions';
+
+      const inputA = document.createElement('input');
+      inputA.type = 'file';
+
+      const inputB = document.createElement('input');
+      inputB.type = 'file';
+
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = 'X';
+      removeBtn.className = 'remove-btn';
+      removeBtn.onclick = () => row.remove();
+
+      tdA.appendChild(inputA);
+      tdB.appendChild(inputB);
+      tdActions.appendChild(removeBtn);
+
+      row.appendChild(tdA);
+      row.appendChild(tdB);
+      row.appendChild(tdActions);
+
+      return row;
+    }
+
+    addPairBtn.addEventListener('click', () => {
+      pairsContainer.appendChild(createPairRow());
+    });
+
+    // tao san 1 cap muc dinh
+    pairsContainer.appendChild(createPairRow());
+
+    function readFileAsText(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsText(file);
+      });
+    }
+
+    // Helpers mimic compare-pairs.ps1
+    const normalizeLine = (s) => {
+      if (s === undefined || s === null) return '';
+      if (s === '') return '<EMPTY LINE>';
+      return s;
+    };
+
+    const buildLineIndex = (lines) => {
+      const map = new Map();
+      lines.forEach((line, i) => {
+        const key = normalizeLine(line);
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push(i + 1); // 1-based
+      });
+      return map;
+    };
+
+    const takeLineNo = (map, content) => {
+      const arr = map.get(content);
+      if (arr && arr.length) {
+        return arr.shift();
+      }
+      return '';
+    };
+
+    const mergeLineAndText = (lineNo, text) => {
+      if (!text || /^\s*$/.test(text)) return '';
+      if (!lineNo) return text;
+      return `${lineNo}: ${text}`;
+    };
+
+    function diffWholeContent(textA, textB, nameA, nameB) {
+      const linesA = textA.replace(/\r\n/g, '\n').split('\n');
+      const linesB = textB.replace(/\r\n/g, '\n').split('\n');
+
+      const idxA = buildLineIndex(linesA);
+      const idxB = buildLineIndex(linesB);
+
+      const countMap = (lines) => {
+        const m = new Map();
+        lines.forEach(line => {
+          m.set(line, (m.get(line) || 0) + 1);
+        });
+        return m;
+      };
+
+      const countA = countMap(linesA);
+      const countB = countMap(linesB);
+
+      const keys = new Set([...countA.keys(), ...countB.keys()]);
+      const leftTexts = [];
+      const rightTexts = [];
+
+      keys.forEach((k) => {
+        const a = countA.get(k) || 0;
+        const b = countB.get(k) || 0;
+        const diff = a - b;
+        if (diff > 0) {
+          for (let i = 0; i < diff; i++) leftTexts.push(normalizeLine(k));
+        } else if (diff < 0) {
+          for (let i = 0; i < -diff; i++) rightTexts.push(normalizeLine(k));
+        }
+      });
+
+      const left = leftTexts.map(t => ({ line: takeLineNo(idxA, t), text: t }));
+      const right = rightTexts.map(t => ({ line: takeLineNo(idxB, t), text: t }));
+
+      const max = Math.max(left.length, right.length);
+      while (left.length < max) left.push({ line: '', text: '' });
+      while (right.length < max) right.push({ line: '', text: '' });
+
+      const rows = [];
+      for (let i = 0; i < max; i++) {
+        rows.push({
+          pair1: nameA,
+          pair2: nameB,
+          diff1: mergeLineAndText(left[i].line, left[i].text),
+          diff2: mergeLineAndText(right[i].line, right[i].text)
+        });
+      }
+
+      return rows;
+    }
+
+    compareBtn.addEventListener('click', async () => {
+      const rows = Array.from(document.querySelectorAll('.pair-row'));
+      resultBody.innerHTML = '';
+
+      const results = [];
+
+      for (const row of rows) {
+        const [inputA, inputB] = row.querySelectorAll('input[type="file"]');
+        const fileA = inputA.files[0];
+        const fileB = inputB.files[0];
+
+        if (!fileA || !fileB) {
+          // bo qua row chua chon du 2 file
+          continue;
+        }
+
+        try {
+          const [textA, textB] = await Promise.all([
+            readFileAsText(fileA),
+            readFileAsText(fileB)
+          ]);
+
+          const rows = diffWholeContent(textA, textB, fileA.name, fileB.name);
+          if (rows.length === 0) {
+            results.push({
+              pair1: fileA.name,
+              pair2: fileB.name,
+              diff1: '(no difference)',
+              diff2: '(no difference)'
+            });
+          } else {
+            results.push(...rows);
+          }
+        } catch (err) {
+          results.push({
+            pair1: fileA ? fileA.name : '(missing)',
+            pair2: fileB ? fileB.name : '(missing)',
+            diff1: 'Loi doc file',
+            diff2: String(err)
+          });
+        }
+      }
+
+      lastResults = results;
+      exportCsvBtn.disabled = results.length === 0;
+
+      // Render ket qua
+      for (const r of results) {
+        const tr = document.createElement('tr');
+
+        const tdA = document.createElement('td');
+        tdA.textContent = r.pair1;
+
+        const tdB = document.createElement('td');
+        tdB.textContent = r.pair2;
+
+        const tdDiff1 = document.createElement('td');
+        tdDiff1.textContent = r.diff1;
+
+        const tdDiff2 = document.createElement('td');
+        tdDiff2.textContent = r.diff2;
+
+        tr.appendChild(tdA);
+        tr.appendChild(tdB);
+        tr.appendChild(tdDiff1);
+        tr.appendChild(tdDiff2);
+        resultBody.appendChild(tr);
+      }
+
+      if (results.length) {
+        resultWrapper.style.display = 'block';
+        resultTable.style.display = 'table';
+      } else {
+        resultWrapper.style.display = 'none';
+        resultTable.style.display = 'none';
+      }
+    });
+
+    // Export CSV: pair1,pair2,diff_of_file1,diff_of_file2
+    exportCsvBtn.addEventListener('click', () => {
+      if (!lastResults.length) return;
+
+      const rows = [];
+      rows.push(['pair1', 'pair2', 'diff_of_file1', 'diff_of_file2']);
+
+      const safe = (value) => {
+        const s = String(value ?? '');
+        const escaped = s.replace(/"/g, '""');
+        if (/[",\n]/.test(escaped)) {
+          return `"${escaped}"`;
+        }
+        return escaped;
+      };
+
+      for (const r of lastResults) {
+        rows.push([
+          safe(r.pair1),
+          safe(r.pair2),
+          safe(r.diff1),
+          safe(r.diff2)
+        ]);
+      }
+
+      const csvContent = rows.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'compare_results.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>

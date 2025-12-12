@@ -1,0 +1,50 @@
+Switch# show version
+Cisco IOS Software, C2960X Software (C2960X-UNIVERSALK9-M), Version 15.2(6)E2, RELEASE SOFTWARE (fc1)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2020 by Cisco Systems, Inc.
+Compiled Fri 28-Feb-20 09:35 by prod_rel_team
+
+test
+ROM: Bootstrap program is C2960X boot loader
+BOOTLDR: C2960X Boot Loader (C2960X-HBOOT-M) Version 15.2(6r)E, RELEASE SOFTWARE (fc1)
+
+Switch uptime is 2 weeks, 5 days, 3 hours, 12 minutes
+System returned to ROM by power-on
+System image file is "flash:c2960x-universalk9-mz.152-6.E2.bin"
+Last reload type: Normal Reload
+Last reload reason: Reload command
+
+This product contains cryptographic features and is subject to United
+States and local country laws governing import, export, transfer, and
+use. Delivery of Cisco cryptographic products does not imply
+third-party authority to import, export, distribute, or use encryption.
+
+cisco WS-C2960X-48FPS-L (APM86XXX) processor (revision V0) with 524288K bytes of memory.
+Processor board ID FOC1234A0BC
+Model Number: WS-C2960X-48FPS-L
+System serial number: FOC1234A0BC1
+
+
+1 Virtual Ethernet interface
+52 Gigabit Ethernet interfaces
+2 Ten Gigabit Ethernet interfaces
+
+The password-recovery mechanism is enabled.
+
+Standby is not present.
+
+Base ethernet MAC Address       : 5C:50:15:AA:BB:CC
+Motherboard assembly number     : 73-18920-02
+Motherboard serial number       : FOC1234A0BC
+Model revision number           : V02
+Motherboard revision number     : A0
+Model number                    : WS-C2960X-48FPS-L
+System serial number            : FOC1234A0BC
+Top Assembly Part Number        : 800-41891-01
+
+Switch Ports Model              SW Version        SW Image              
+------ ----- -----              ----------        ----------            
+*    1 52    WS-C2960X-48FPS-L  15.2(6)E2         C2960X-UNIVERSALK9-M  
+
+Configuration register is 0xF
+
