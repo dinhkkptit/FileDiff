@@ -25,9 +25,9 @@ Utilities to compare pairs of text files line-by-line, view differences, and exp
 
 <a>
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=opendatalab/FileDiff&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=opendatalab/FileDiff&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=opendatalab/FileDiff&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=dinhkkptit/FileDiff&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=dinhkkptit/FileDiff&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=dinhkkptit/FileDiff&type=Date" />
  </picture>
 </a>
  
