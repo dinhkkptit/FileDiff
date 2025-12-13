@@ -20,3 +20,14 @@ Utilities to compare pairs of text files line-by-line, view differences, and exp
 ## Notes
 - Empty lines are rendered as `<EMPTY LINE>` for clarity.
 - Columns in the HTML tables auto-size; the actions column stays compact.
+
+# Star History
+
+<a>
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=opendatalab/FileDiff&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=opendatalab/FileDiff&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=opendatalab/FileDiff&type=Date" />
+ </picture>
+</a>
+ 
